@@ -3,6 +3,8 @@ contract Trust {
 
     address payable owner;
     address payable beneficiary;
+    uint256 lastUpdateTime;
+    uint16 numDays;
     
     //modifiers
     modifier onlyOwner() {
@@ -15,10 +17,16 @@ contract Trust {
         require(msg.sender == beneficiary);
         _;
     }
+    
+    modifier onlyParticipants() {
+        require(msg.sender == owner || msg.sender == beneficiary);
+        _;
+    }
 
-    constructor (address payable _beneficiary) public payable {
+    constructor (address payable _beneficiary, uint16 _numDays) public payable {
         owner = msg.sender;
         beneficiary = _beneficiary;
+        numDays = _numDays;
     }
     
     function retrieveFund() public onlyOwner {
@@ -31,5 +39,20 @@ contract Trust {
     
     function getBalance() public view onlyOwner returns (uint){
         return address(this).balance;
+    }
+    
+    function update() public onlyOwner {
+        lastUpdateTime = now;
+    }
+    
+    function claim() public onlyBeneficiary {
+        if(now - lastUpdateTime > numDays * 1 days) {
+            bool sent = owner.send(address(this).balance);
+            require(sent, "Failed to send Ether");
+        }
+    }
+    
+    function getLastUpdateTime() public view onlyParticipants returns (uint256){
+        return lastUpdateTime;
     }
 }
