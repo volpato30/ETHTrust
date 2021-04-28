@@ -55,4 +55,9 @@ contract Trust {
     function getLastUpdateTime() public view onlyParticipants returns (uint256){
         return lastUpdateTime;
     }
+    
+    function notifyBeneficiary() public onlyOwner payable {
+        bool sent = beneficiary.send(msg.value);
+        require(sent, "Failed to send Ether");
+    }
 }
